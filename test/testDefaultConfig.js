@@ -1,8 +1,6 @@
-'use strict';
+import mongoConfig from './testMongoConfig.js';
 
-const mongoConfig = require('./testMongoConfig');
-
-module.exports = () => ({
+const bsonSpec = () => ({
   mongodb: {
     connectionString: mongoConfig.makeConnectionUrl(),
 
@@ -22,15 +20,17 @@ module.exports = () => ({
     sslKey: '',
   },
 
+  healthCheck: {
+    path: '/status',
+  },
+
   useBasicAuth: false,
 
   options: {
     documentsPerPage: 10,
-    editorTheme: 'rubyblue',
-
     logger: { skip: () => true },
     readOnly: false,
   },
-
-  defaultKeyNames: {},
 });
+
+export default bsonSpec;

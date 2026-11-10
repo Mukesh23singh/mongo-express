@@ -1,10 +1,8 @@
-'use strict';
-
-const webpack = require('webpack');
-const path = require('path');
-const AssetsPlugin = require('assets-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+import { fileURLToPath } from 'node:url';
+import AssetsPlugin from 'assets-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import webpack from 'webpack';
 
 const env = process.env.NODE_ENV || 'development';
 const isDev = env === 'development';
@@ -12,19 +10,19 @@ const isProd = !isDev;
 
 const fileSuffix = isDev ? '' : '-[chunkhash].min';
 
-function resolveModulePath(name) {
-  const packageJson = '/package.json';
-  return path.dirname(require.resolve(`${name}${packageJson}`));
-}
-
-const codemirrorPath = resolveModulePath('codemirror');
-const bootstrapPath = resolveModulePath('bootstrap');
-
-module.exports = {
+export default {
   mode: isProd ? 'production' : 'development',
+  performance: {
+    maxEntrypointSize: 768000,
+    maxAssetSize: 768000,
+  },
   entry: {
     index: {
       import: './lib/scripts/index.js',
+      dependOn: 'vendor',
+    },
+    login: {
+      import: './lib/scripts/login.js',
       dependOn: 'vendor',
     },
     database: {
@@ -47,13 +45,13 @@ module.exports = {
     // Shared
     vendor: './lib/scripts/vendor.js',
     codemirror: {
-      import: './lib/scripts/codeMirrorLoader.js',
+      import: './lib/scripts/editor.js',
       dependOn: 'vendor',
     },
   },
   output: {
     filename: `[name]${fileSuffix}.js`,
-    path: path.join(__dirname, 'build'),
+    path: fileURLToPath(new URL('build', import.meta.url)),
     publicPath: 'public/',
   },
 
@@ -66,6 +64,14 @@ module.exports = {
         options: {
           presets: ['@babel/preset-env'],
         },
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.(png|svg|jpg|gif)$/,
+        use: ['file-loader'],
       },
     ],
   },
@@ -82,15 +88,6 @@ module.exports = {
       patterns: [
         { from: 'public/images/*', to: 'img/[name][ext]' },
         { from: 'public/stylesheets/*', to: 'css/[name][ext]' },
-
-        { from: path.join(codemirrorPath, '/lib/codemirror.css'), to: 'css/[name][ext]' },
-        { from: path.join(codemirrorPath, '/theme'), to: 'css/theme/[name][ext]' },
-
-        { from: path.join(bootstrapPath, '/dist/fonts'), to: 'fonts/[name][ext]' },
-        { from: path.join(bootstrapPath, '/dist/css/bootstrap.min.css'), to: 'css/[name][ext]' },
-        { from: path.join(bootstrapPath, '/dist/css/bootstrap.min.css.map'), to: 'css/[name][ext]' },
-        { from: path.join(bootstrapPath, '/dist/css/bootstrap-theme.min.css'), to: 'css/[name][ext]' },
-        { from: path.join(bootstrapPath, '/dist/css/bootstrap-theme.min.css.map'), to: 'css/[name][ext]' },
       ],
     }),
 
